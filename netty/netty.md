@@ -3,9 +3,13 @@
 # netty主要模块 
 * buffer
 * codec
+    - http
+    - http2 
+    - redis
 * `transport`
     - EvenLoop
     - Channel
     - Selector
+        * epoll
     - Handler
 
