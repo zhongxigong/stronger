@@ -9,6 +9,8 @@
 * `transport`
     - EvenLoop
     - Channel
+        * Channel是nio中的一个概念,channel上可以进行数据的输入和输出。
+        * Channel操作的对象是buffer
     - Selector
         * epoll
     - Handler
