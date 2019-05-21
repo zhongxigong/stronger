@@ -1,0 +1,135 @@
+@startuml
+
+
+skinparam BackGroundColor #3c3f41
+
+skinparam class {
+    BorderColor #cbd5d6
+    ArrowColor #589df6
+    BackGroundColor #645e4d
+}
+
+interface ChannelInboundInvoker{
+    ChannelInboundInvoker fireChannelRegistered()
+    ChannelInboundInvoker fireChannelUnregistered()
+    ChannelInboundInvoker fireChannelActive()
+    ChannelInboundInvoker fireChannelInactive()
+    ChannelInboundInvoker fireChannelRead(Object msg)
+    ChannelInboundInvoker fireChannelReadComplete()
+    ChannelInboundInvoker fireChannelWritabilityChanged()
+}
+
+
+interface ChannelOutboundInvoker{
+    ChannelFuture bind(SocketAddress localAddress)
+    ChannelFuture connect(SocketAddress remoteAddress)
+    ChannelFuture close(ChannelPromise promise)
+    ChannelOutboundInvoker read()
+    ChannelFuture write(Object msg)
+    ChannelFuture write(Object msg, ChannelPromise promise)
+    ChannelOutboundInvoker flush()
+    ChannelFuture writeAndFlush(Object msg, ChannelPromise promise)
+    ChannelFuture writeAndFlush(Object msg)
+
+}
+
+
+interface ChannelPipeline{
+    ChannelPipeline addFirst(String name, ChannelHandler handler)
+    ChannelPipeline addLast(String name, ChannelHandler handler)
+    ChannelPipeline addBefore(String baseName, String name, ChannelHandler handler)
+    ChannelPipeline addAfter(String baseName, String name, ChannelHandler handler)
+    ChannelPipeline addFirst(ChannelHandler... handlers)
+    ChannelPipeline addLast(ChannelHandler... handlers)
+    ChannelPipeline remove(ChannelHandler handler)
+    ChannelPipeline replace(ChannelHandler oldHandler, String newName, ChannelHandler newHandler)
+    ChannelHandler first()
+    ChannelHandlerContext firstContext()
+    ChannelHandler last()
+    ChannelHandlerContext lastContext()
+    ChannelHandler get(String name)
+    ChannelHandlerContext context(ChannelHandler handler)
+    Channel channel()
+    ChannelPipeline fireChannelRegistered()
+    ChannelPipeline fireChannelActive()
+    ChannelPipeline fireChannelRead(Object msg)
+}
+
+
+class DefaultChannelPipeline{
+    AbstractChannelHandlerContext head
+    AbstractChannelHandlerContext tail
+    Channel channel
+    ChannelFuture succeededFuture
+    PendingHandlerCallback pendingHandlerCallbackHead
+
+    DefaultChannelPipeline(Channel channel)
+}
+
+interface ChannelHandler{
+    void handlerAdded(ChannelHandlerContext ctx)
+    void handlerRemoved(ChannelHandlerContext ctx)
+
+}
+
+interface ChannelOutboundHandler{
+    void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise)
+    void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,SocketAddress localAddress, ChannelPromise promise)
+    void disconnect(ChannelHandlerContext ctx, ChannelPromise promise)
+    void read(ChannelHandlerContext ctx)
+    void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+    void flush(ChannelHandlerContext ctx)
+}
+
+interface ChannelInboundHandler{
+    void channelRegistered(ChannelHandlerContext ctx)
+    void channelActive(ChannelHandlerContext ctx)
+    void channelRead(ChannelHandlerContext ctx, Object msg)
+    void channelReadComplete(ChannelHandlerContext ctx)
+
+}
+
+class ChannelDuplexHandler{
+
+}
+
+
+class ChannelHandlerContext{
+    Channel channel()
+    EventExecutor executor()
+    ChannelHandler handler()
+    ChannelPipeline pipeline()
+
+}
+
+class AbstractChannelHandlerContext{
+    AbstractChannelHandlerContext next
+    AbstractChannelHandlerContext prev
+    DefaultChannelPipeline pipeline
+    EventExecutor executor
+    void invokeChannelRegistered(final AbstractChannelHandlerContext next)
+    void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg)
+}
+
+
+ChannelPipeline -up-|> ChannelInboundInvoker : implement
+
+ChannelPipeline -up-|> ChannelOutboundInvoker : implement
+
+ChannelPipeline -up-|> Iterable : implement
+
+DefaultChannelPipeline -up-|> ChannelPipeline : implement
+
+
+ChannelOutboundHandler -up-|> ChannelHandler : extend
+
+ChannelInboundHandler  -up-|> ChannelHandler : extend
+
+
+ChannelHandlerContext  -up-|>  ChannelInboundInvoker : extend
+
+ChannelHandlerContext  -up-|>  ChannelOutboundInvoker : extend
+
+AbstractChannelHandlerContext -up-|>  ChannelHandlerContext : extend
+
+@enduml

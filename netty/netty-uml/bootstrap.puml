@@ -1,0 +1,78 @@
+@startuml
+
+skinparam BackGroundColor #3c3f41
+
+skinparam class {
+    BorderColor #cbd5d6
+    ArrowColor #589df6
+    BackGroundColor #645e4d
+}
+
+
+class AbstractBootstrap{
+    EventLoopGroup group
+    ChannelFactory<? extends C> channelFactory
+    SocketAddress localAddress
+    Map<ChannelOption<?>, Object> options
+    Map<AttributeKey<?>, Object> attrs
+    ChannelHandler handler
+
+    B group(EventLoopGroup group)
+    B channel(Class<? extends C> channelClass)
+    B channelFactory(ChannelFactory<? extends C> channelFactory)
+    B localAddress(SocketAddress localAddress)
+    B option(ChannelOption<T> option, T value)
+    B attr(AttributeKey<T> key, T value)
+    ChannelFuture register()
+    ChannelFuture bind()
+    void init(Channel channel)
+    B handler(ChannelHandler handler)
+    EventLoopGroup group()
+}
+
+class ServerBootstrapAcceptor{
+    EventLoopGroup childGroup
+    ChannelHandler childHandler
+    Runnable enableAutoReadTask
+
+    void channelRead(ChannelHandlerContext ctx, Object msg)
+    
+}
+
+class Bootstrap{
+    BootstrapConfig config
+    SocketAddress remoteAddress
+
+    Bootstrap remoteAddress(SocketAddress remoteAddress)
+    ChannelFuture connect()
+    ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress)
+    void init(Channel channel)
+}
+
+
+class ServerBootstrap{
+    Map<ChannelOption<?>, Object> childOptions
+    Map<AttributeKey<?>, Object> childAttrs
+    ServerBootstrapConfig config
+    EventLoopGroup childGroup
+    ChannelHandler childHandler
+
+    ServerBootstrap group(EventLoopGroup group)
+    ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup)
+    ServerBootstrap childOption(ChannelOption<T> childOption, T value)
+    ServerBootstrap childAttr(AttributeKey<T> childKey, T value)
+    ServerBootstrap childHandler(ChannelHandler childHandler)
+    init(Channel channel)
+    EventLoopGroup childGroup()
+    ChannelHandler childHandler()
+
+}
+
+Bootstrap -up-> AbstractBootstrap : extend
+
+ServerBootstrap -up-> AbstractBootstrap : exend
+
+
+ServerBootstrap *-up- ServerBootstrapAcceptor : contains >
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+
+skinparam BackGroundColor #3c3f41
+
+skinparam class {
+    BorderColor #cbd5d6
+    ArrowColor #589df6
+    BackGroundColor #645e4d
+}
+
+
+
+
+interface EventExecutorGroup{
+    Iterator<EventExecutor> iterator()
+    Future<?> submit(Runnable task)
+    ScheduledFuture<?> scheduleAtFixedRate(Runnable command...)
+}
+
+
+interface EventLoopGroup{
+    EventLoop next()
+    ChannelFuture register(Channel channel)
+}
+
+class AbstractEventExecutorGroup{
+    Future<?> submit(Runnable task)
+    ScheduledFuture<?> schedule(Runnable command ...)
+    void execute(Runnable command)
+    <T> List<java.util.concurrent.Future<T>> invokeAll(C....)
+}
+
+EventExecutorGroup -up-|> ScheduledExecutorService : extend
+
+EventExecutorGroup -up-|> Iterable : implement
+
+EventLoopGroup -up-|> EventExecutorGroup : extend
+
+AbstractEventExecutorGroup -up-|> EventExecutorGroup : extend
+
+
+AbstractEventLoopGroup -up-|> AbstractEventExecutorGroup : extend
+
+AbstractEventLoopGroup -up-|> EventLoopGroup : implement
+
+
+MultithreadEventLoopGroup -up-|> MultithreadEventExecutorGroup : extend
+
+MultithreadEventLoopGroup -up-|> EventLoopGroup : implement
+
+MultithreadEventExecutorGroup -up-|> AbstractEventExecutorGroup : extend
+
+DefaultEventLoopGroup -up-|> MultithreadEventLoopGroup : extend
+
+LocalEventLoopGroup -up-|> DefaultEventLoopGroup : extend
+
+
+EpollEventLoopGroup -up-|> MultithreadEventLoopGroup : extend
+
+NioEventLoopGroup -up-|> MultithreadEventLoopGroup : extend
+
+KQueueEventLoopGroup -up-|> MultithreadEventLoopGroup : extend
+
+EventLoop -up-|> OrderedEventExecutor : extend
+
+EventLoop -up-|> EventLoopGroup : extend
+
+@enduml

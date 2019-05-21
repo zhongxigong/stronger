@@ -1,0 +1,354 @@
+@startuml
+
+
+skinparam BackGroundColor #3c3f41
+
+skinparam class {
+    BorderColor #cbd5d6
+    ArrowColor #589df6
+    BackGroundColor #645e4d
+}
+
+
+
+
+interface EventLoop{
+    EventLoopGroup parent();
+}
+
+
+class AbstractEventLoop{
+    EventLoop next()
+}
+
+
+interface EventExecutor{
+    boolean inEventLoop(Thread thread)
+    <V> Promise<V> newPromise()
+    <V> Future<V> newSucceededFuture(V result)
+    <V> Future<V> newFailedFuture(Throwable cause)
+}
+
+
+
+interface Channel{
+    EventLoop eventLoop();
+    Channel parent();
+    Unsafe unsafe();
+    ChannelPipeline pipeline();
+    ByteBufAllocator alloc();
+}
+
+interface Unsafe{
+
+}
+
+
+class AbstractChannel{
+    - Channel parent
+    - Unsafe unsafe
+    - DefaultChannelPipeline pipeline
+    - SocketAddress localAddress
+    - SocketAddress remoteAddress
+    - EventLoop eventLoop
+
+    EventLoop eventLoop()
+    ChannelFuture write(Object msg)
+
+
+}
+
+class AbstractNioChannel{
+    - SelectableChannel ch
+    - int readInterestOp
+    - Runnable clearReadPendingRunnable
+    boolean readPending
+    Runnable clearReadPendingRunnable
+    ChannelPromise connectPromise
+    ScheduledFuture<?> connectTimeoutFuture
+    SocketAddress requestedRemoteAddress
+
+
+    SelectableChannel javaChannel()
+    NioUnsafe unsafe()
+    NioEventLoop eventLoop()
+    void doRegister()
+    void doDeregister()
+    abstract boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress)
+    ByteBuf newDirectBuffer(ByteBuf buf)
+    ByteBuf newDirectBuffer(ReferenceCounted holder, ByteBuf buf)
+    void doClose()
+}
+
+
+class AbstractNioByteChannel{
+    AbstractNioUnsafe newUnsafe()
+    int doWrite0(ChannelOutboundBuffer in)
+    int doWriteInternal(ChannelOutboundBuffer in, Object msg)
+    void doWrite(ChannelOutboundBuffer in)
+    Object filterOutboundMessage(Object msg)
+    void incompleteWrite(boolean setOpWrite)
+    long doWriteFileRegion(FileRegion region)
+    int doReadBytes(ByteBuf buf)
+    int doWriteBytes(ByteBuf buf)
+
+}
+
+class NioSocketChannel{
+    static final SelectorProvider DEFAULT_SELECTOR_PROVIDER
+
+    SocketChannel newSocket(SelectorProvider provider)
+    SocketChannel javaChannel()
+    ChannelFuture shutdownOutput(
+    ChannelFuture shutdownInput()
+    ChannelFuture shutdown()
+    void doBind(SocketAddress localAddress)
+    boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress)
+    int doReadBytes(ByteBuf byteBuf)
+    int doWriteBytes(ByteBuf buf)
+    long doWriteFileRegion(FileRegion region)
+    void doWrite(ChannelOutboundBuffer in)
+    AbstractNioUnsafe newUnsafe()
+
+}
+
+class SocketChannel{
+     ServerSocketChannel parent()
+     InetSocketAddress localAddress()
+     InetSocketAddress remoteAddress()
+}
+
+class ServerSocketChannel{
+    InetSocketAddress localAddress()
+    InetSocketAddress remoteAddress()
+}
+
+class EpollServerSocketChannel{
+
+}
+
+interface DuplexChannel{
+    ChannelFuture shutdownInput()
+    ChannelFuture shutdownOutput()
+}
+
+class AbstractEpollServerChannel{
+
+}
+
+interface ServerChannel{
+
+}
+
+interface UnixChannel
+
+
+class DefaultEventLoop{
+    void run()
+}
+
+
+class SingleThreadEventLoop{
+    int DEFAULT_MAX_PENDING_TASKS
+    Queue<Runnable> tailTasks
+
+
+    ChannelFuture register(final ChannelPromise promise)
+    void executeAfterEventLoopIteration(Runnable task)
+
+}
+
+class SingleThreadEventExecutor{
+    int DEFAULT_MAX_PENDING_EXECUTOR_TASKS
+    Queue<Runnable> taskQueue
+    Executor executor
+    RejectedExecutionHandler rejectedExecutionHandler
+
+    Runnable takeTask()
+    void addTask(Runnable task)
+    abstract void run()
+    void execute(Runnable task)
+    void reject(Runnable task)
+    void doStartThread()
+}
+
+
+class EpollEventLoop{
+FileDescriptor epollFd
+    FileDescriptor epollFd
+    FileDescriptor eventFd
+    FileDescriptor timerFd
+    IntObjectMap<AbstractEpollChannel> channels
+    EpollEventArray events
+    SelectStrategy selectStrategy
+
+    void run()
+    void processReady(EpollEventArray events, int ready)
+    void add(AbstractEpollChannel ch)
+    void modify(AbstractEpollChannel ch)
+    void remove(AbstractEpollChannel ch)
+    int epollWait(boolean oldWakeup)
+
+}
+
+class NioEventLoop{
+    Selector selector
+    Selector unwrappedSelector
+    SelectedSelectionKeySet selectedKeys
+    SelectorProvider provider
+    SelectStrategy selectStrategy
+
+    SelectorTuple openSelector()
+    void register(final SelectableChannel ch, final int interestOps, final NioTask<?> task)
+    void register0(SelectableChannel ch, int interestOps, NioTask<?> task)
+    void rebuildSelector()
+    void run()
+    void processSelectedKeys()
+    void processSelectedKeysPlain(Set<SelectionKey> selectedKeys)
+    void processSelectedKeysOptimized()
+    void processSelectedKey(SelectionKey k, NioTask<SelectableChannel> task)
+    void select(boolean oldWakenUp)
+
+
+}
+
+class AbstractScheduledEventExecutor{
+    Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR
+    PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue
+
+    PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue()
+    void cancelScheduledTasks()
+    Runnable pollScheduledTask()
+    Runnable pollScheduledTask(long nanoTime)
+    ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit)
+    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)
+    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit)
+
+
+}
+
+class AbstractEventExecutor{
+    EventExecutorGroup parent
+
+    Future<?> submit(Runnable task)
+    <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value)
+    ScheduledFuture<?> schedule(Runnable command, long delay,TimeUnit unit)
+    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)
+    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit)
+
+}
+
+
+class EventExecutorGroup{
+    Iterator<EventExecutor> iterator()
+    Future<?> submit(Runnable task)
+    ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit)
+    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)
+    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit)
+
+}
+
+class NioServerSocketChannel{
+    SelectorProvider DEFAULT_SELECTOR_PROVIDER
+    ServerSocketChannel newSocket(SelectorProvider provider)
+    ServerSocketChannel javaChannel()
+    void doBind(SocketAddress localAddress)
+    int doReadMessages(List<Object> buf)
+    boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress)
+    boolean doWriteMessage(Object msg, ChannelOutboundBuffer in)
+
+}
+
+
+AbstractEventExecutor -up-|> AbstractExecutorService : extend
+
+AbstractEventExecutor -up-|> EventExecutor : implement
+
+
+AbstractEventLoop -up-|> EventLoop : implement
+
+AbstractEventLoop -up-|> AbstractEventExecutor : extend
+
+AbstractChannel -up-|> Channel : implement
+
+AbstractNioChannel -up-|> AbstractChannel : extend
+
+AbstractNioByteChannel -up-|> AbstractNioChannel : extend
+
+NioSocketChannel -up-|> AbstractNioByteChannel : extend
+
+NioSocketChannel -up-|> SocketChannel : implement
+
+
+SocketChannel -up-|> DuplexChannel : extend
+
+
+DuplexChannel -up-|> Channel : extend
+
+
+Channel -up-|> ChannelOutboundInvoker : extend
+
+Channel -up-|> AttributeMap : extend
+
+Channel -up-|> Comparable : extend
+
+
+AbstractNioMessageChannel -up-|> AbstractNioChannel : extend
+
+NioServerSocketChannel -up-|> AbstractNioMessageChannel : extend
+
+NioServerSocketChannel -up-|> ServerSocketChannel : implement
+
+ServerSocketChannel -up-|> ServerChannel : extend
+
+ServerChannel -up-|> Channel : extend
+
+
+EpollServerSocketChannel -up-|> ServerSocketChannel : implement
+
+EpollServerSocketChannel -up-|> AbstractEpollServerChannel : extend
+
+
+AbstractEpollServerChannel -up-|> AbstractEpollChannel : extend
+
+AbstractEpollServerChannel -up-|> ServerChannel : implement
+
+AbstractEpollChannel -up-|> AbstractChannel : extend
+
+AbstractEpollChannel -up-|> UnixChannel : implement
+
+
+UnixChannel -up-|> Channel : extend
+
+
+SingleThreadEventLoop -up-|> EventLoop : implement
+
+SingleThreadEventLoop -up-|> SingleThreadEventExecutor : implement
+
+SingleThreadEventExecutor -up-|>  AbstractScheduledEventExecutor : extend
+
+AbstractScheduledEventExecutor -up-|> AbstractEventExecutor : extend
+
+DefaultEventLoop -up-|> SingleThreadEventLoop : extend
+
+
+EventLoop -up-|>  EventLoopGroup : extend
+
+EventLoopGroup -up-|> EventExecutorGroup : extend
+
+EventExecutorGroup  -up-|>  ScheduledExecutorService : extend
+
+EventLoop -up-|> OrderedEventExecutor : extend
+
+OrderedEventExecutor -up-|> EventExecutor : extend
+
+EpollEventLoop -up-|> SingleThreadEventLoop : extend
+
+NioEventLoop -up-|> SingleThreadEventLoop : extend
+
+KQueueEventLoop -up-|> SingleThreadEventLoop : extend
+
+
+EventExecutor -up-|> EventExecutorGroup : extend
+
+@enduml
